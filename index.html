@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Claude Code で開く</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, sans-serif; margin: 0 auto; max-width: 560px; padding: 32px 16px; line-height: 1.6; background: Canvas; color: CanvasText; }
+  a.btn { display: block; text-align: center; padding: 18px; border-radius: 14px; background: #d97757; color: #fff; font-size: 20px; font-weight: 600; text-decoration: none; margin: 16px 0; }
+  .note { font-size: 14px; opacity: .7; }
+  .err { color: #d70015; font-weight: 600; }
+</style>
+</head>
+<body>
+<p id="msg">Claude Code を開いています…</p>
+<a class="btn" id="go" href="#">Claude Code で開く</a>
+<p class="note">開かないときは上のボタンを押してください。ブラウザに「Claude を開きますか？」と聞かれたら「開く」を選びます（「常に許可」にすると次から聞かれません）。開いたらこのタブは閉じて構いません。</p>
+<script>
+(function () {
+  // 受け取るのは Notion の行id（32桁の英数字）だけ。指示文はこのページの中で組み立てる（外から任意の文を入れさせない）
+  var q = new URLSearchParams(location.search);
+  var id = (q.get("id") || "").replace(/-/g, "").toLowerCase();
+  var ok = /^[0-9a-f]{32}$/.test(id);
+  var msg = document.getElementById("msg"), go = document.getElementById("go");
+  if (!ok) {
+    msg.className = "err";
+    msg.textContent = "リンクの形が正しくありません（行のidがありません）。";
+    go.style.display = "none";
+    return;
+  }
+  var prompt = "Notion TODO の行を始めます。行id: " + id + "\n" +
+    "notion-todo Skill の「始める」手順に従ってください（notion-todo start " + id + "）。";
+  go.href = "claude://code/new?q=" + encodeURIComponent(prompt);
+  setTimeout(function () { location.href = go.href; }, 300);
+})();
+</script>
+</body>
+</html>
