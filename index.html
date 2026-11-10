@@ -33,7 +33,9 @@
   }
   var prompt = "Notion TODO の行を始めます。行id: " + id + "\n" +
     "notion-todo Skill の「始める」手順に従ってください（notion-todo start " + id + "）。";
-  go.href = "claude://code/new?q=" + encodeURIComponent(prompt);
+  // 最初は ClaudeCode の一番上で開く（前回のフォルダ＝別プロジェクトの決まりで開かないため）。
+  // ~ で書くと Mac ごとのユーザー名の違いを吸収できる（2026-11-10 実測）。作業フォルダへは開いたセッションが移る
+  go.href = "claude://code/new?q=" + encodeURIComponent(prompt) + "&folder=" + encodeURIComponent("~/Documents/Vives/ClaudeCode");
   setTimeout(function () { location.href = go.href; }, 300);
 })();
 </script>
