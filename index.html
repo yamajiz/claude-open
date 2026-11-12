@@ -20,22 +20,32 @@
 <p class="note">開かないときは上のボタンを押してください。ブラウザに「Claude を開きますか？」と聞かれたら「開く」を選びます（「常に許可」にすると次から聞かれません）。開いたらこのタブは閉じて構いません。</p>
 <script>
 (function () {
-  // 受け取るのは Notion の行id（32桁の英数字）だけ。指示文はこのページの中で組み立てる（外から任意の文を入れさせない）
+  // 受け取るのは次のどちらか1つだけ。指示文はこのページの中で組み立てる（外から任意の文を入れさせない）
+  //   ?id=<Notion の行id 32桁の英数字>   … 「▶ 始める」
+  //   ?mtg=<会議の日時 YYYYMMDD-HHMMSS>  … Muse の議事録通知からの「TODO整理」（会議名は公開ページに載せないため数字だけ）
   var q = new URLSearchParams(location.search);
   var id = (q.get("id") || "").replace(/-/g, "").toLowerCase();
-  var ok = /^[0-9a-f]{32}$/.test(id);
+  var mtg = (q.get("mtg") || "").trim();
   var msg = document.getElementById("msg"), go = document.getElementById("go");
-  if (!ok) {
+  var prompt, folder;
+  if (/^[0-9a-f]{32}$/.test(id) && !mtg) {
+    prompt = "Notion TODO の行を始めます。行id: " + id + "\n" +
+      "notion-todo Skill の「始める」手順に従ってください（notion-todo start " + id + "）。";
+    // 最初は ClaudeCode の一番上で開く（前回のフォルダ＝別プロジェクトの決まりで開かないため）。
+    // ~ で書くと Mac ごとのユーザー名の違いを吸収できる（2026-11-10 実測）。作業フォルダへは開いたセッションが移る
+    folder = "~/Documents/Vives/ClaudeCode";
+  } else if (/^20\d{6}-\d{6}$/.test(mtg) && !q.get("id")) {
+    prompt = "議事録からTODOを整理します。会議: " + mtg + "\n" +
+      "notion-todo Skill の「議事録から整理」手順に従ってください（notion-todo minutes " + mtg + "）。";
+    // TODO整理専用のフォルダ（2026-11-12 山路さん決定）
+    folder = "~/Documents/Vives/ClaudeCode/03_projects/todo-triage";
+  } else {
     msg.className = "err";
-    msg.textContent = "リンクの形が正しくありません（行のidがありません）。";
+    msg.textContent = "リンクの形が正しくありません（行のid か 会議の日時がありません）。";
     go.style.display = "none";
     return;
   }
-  var prompt = "Notion TODO の行を始めます。行id: " + id + "\n" +
-    "notion-todo Skill の「始める」手順に従ってください（notion-todo start " + id + "）。";
-  // 最初は ClaudeCode の一番上で開く（前回のフォルダ＝別プロジェクトの決まりで開かないため）。
-  // ~ で書くと Mac ごとのユーザー名の違いを吸収できる（2026-11-10 実測）。作業フォルダへは開いたセッションが移る
-  go.href = "claude://code/new?q=" + encodeURIComponent(prompt) + "&folder=" + encodeURIComponent("~/Documents/Vives/ClaudeCode");
+  go.href = "claude://code/new?q=" + encodeURIComponent(prompt) + "&folder=" + encodeURIComponent(folder);
   setTimeout(function () { location.href = go.href; }, 300);
 })();
 </script>
